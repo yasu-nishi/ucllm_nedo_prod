@@ -38,9 +38,16 @@ ffn_hidden_size=$(yq -e '.ffn_hidden_size' "$config_file")
 num_attn_heads=$(yq -e '.num_attn_heads' "$config_file")
 seq_len=$(yq -e '.seq_len' "$config_file")
 
+
+train_iters=$(yq -e '.train_iters' "$config_file")
+#train_tokens=$(yq -e '.train_tokens' "$config_file")
+lr_decay_tokens=$(yq -e '.lr_decay_tokens' "$config_file")
+#lr_warmup_tokens_in_million=$(yq -e '.lr_warmup_tokens_in_million' "$config_file")
+#lr_warmup_steps=$(yq -e '.lr_warmup_steps' "$config_file")
+
 lr=$(yq -e '.lr' "$config_file")
 min_lr=$(yq -e '.min_lr' "$config_file")
-lr_warmup_steps=$(yq -e '.lr_warmup_steps' "$config_file")
+lr_warmup_iters=$(yq -e '.lr_warmup_iters' "$config_file")
 weight_decay=$(yq -e '.weight_decay' "$config_file")
 clip_grad=$(yq -e '.clip_grad' "$config_file")
 init_std=$(yq -e '.init_std' "$config_file")
@@ -58,10 +65,6 @@ eval_interval=$(yq -e '.eval_interval' "$config_file")
 num_save=$(yq -e '.num_save' "$config_file")
 save_interval=$(yq -e '.save_interval' "$config_file")
 
-train_tokens=$(yq -e '.train_tokens' "$config_file")
-lr_decay_tokens=$(yq -e '.lr_decay_tokens' "$config_file")
-lr_warmup_tokens_in_million=$(yq -e '.lr_warmup_tokens_in_million' "$config_file")
-lr_warmup_steps=$(yq -e '.lr_warmup_steps' "$config_file")
 
 # Checks the required arguments.
 if [[ -z ${input_tokenizer_file} ]] || [[ -z ${output_model_dir} ]]; then
@@ -292,6 +295,12 @@ data_options=" \
 
 #unrecogizd --norm-epsilon 1e-5 \
 #--lr-warmup-iters ${lr_warmup_steps} \ エラーが消えない
+#unrecogizd --norm-epsilon 1e-5 \
+#--lr-warmup-iters ${lr_warmup_steps} \ エラーが消えない
+##--train-tokens ${train_tokens} \
+##--train-samples ${train_samples} \
+    
+
 megatron_options=" \
     --override-opt_param-scheduler \
     --optimizer adam\
@@ -309,10 +318,9 @@ megatron_options=" \
     --num-attention-heads ${num_attn_heads} \
     --seq-length ${seq_len} \
     --max-position-embeddings ${seq_len} \
-    --train-tokens ${train_tokens} \
-    --train-samples ${train_samples} \
+    --train-iters ${train_iters} \
     --lr ${lr} \
-    --lr-warmup-iters ${lr_warmup_steps} \
+    --lr-warmup-iters ${lr_warmup_iters} \
     --min-lr ${min_lr} \
     --lr-decay-style ${lr_decay_style} \
     --split 949,50,1 \
@@ -324,7 +332,7 @@ megatron_options=" \
     --clip-grad ${clip_grad} \
     --hysteresis 2 \
     --num-workers ${num_workers} \
-    --bf16\
+    --fp16\
     --seed ${seed} \
     --load ${checkpoint_path} \
     --save ${checkpoint_path} \
@@ -337,7 +345,6 @@ megatron_options=" \
     --no-masked-softmax-fusion \
     --no-query-key-layer-scaling \
     --swiglu \
-    --use-flash-attn-v2 \
     --tensorboard-queue-size 1 \
     --log-timers-to-tensorboard \
     --log-batch-size-to-tensorboard \
