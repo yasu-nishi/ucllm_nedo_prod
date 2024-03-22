@@ -10,10 +10,11 @@
 
 #model params
 model_size: 0.7
-hidden_size: 1024
-num_layers: 24
+hidden_size: 512
+ffn_hidden_size: 1108
+num_layers: 2
 num_attn_heads: 16
-seq_len: 2048
+seq_len: 1024
 
 #learning parametor
 lr: 3.0e-4
@@ -23,7 +24,7 @@ weight_decay: 0.1
 clip_grad: 1
 init_std: 0.02
 
-global_batch_size: 48
+global_batch_size: 4
 
 #deepspeed
 zero_stage: 0
@@ -38,6 +39,7 @@ eval_interval: 100
 num_save: 100
 save_interval: 1000
 #token info
-train_tokens: 300000000000 # 3.6 b, 1 epochになるように調整
+train_tokens: 300000 # 3.6 b, 1 epochになるように調整
 lr_decay_tokens: 300000000000
 lr_warmup_tokens_in_million: 3000000000
+lr_warmup_steps: 100

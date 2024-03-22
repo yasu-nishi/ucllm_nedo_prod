@@ -11,9 +11,10 @@ echo "megatron_deepspeed_dir = ${megatron_deepspeed_dir}"
 echo ""
 
 # Initializes the arguments.
+#config_file="${HOME}/ucllm_nedo_dev/train/scripts/step2_pretrain_model/my_train/config.yaml"
 input_tokenizer_file=""
 output_model_dir=""
-save_interval=1000
+#save_interval=1000
 
 # Parses the arguments.
 while [[ ${#} -gt 0 ]]; do
@@ -21,12 +22,46 @@ while [[ ${#} -gt 0 ]]; do
         # Shifts twice for option that takes an argument.
         --input_tokenizer_file) input_tokenizer_file=${2}; shift ;;
         --output_model_dir) output_model_dir=${2}; shift ;;
+        --config_file) config_file=${2}; shift ;;
         --save_interval) save_interval=${2}; shift ;;
         *) echo "Unknown parameter passed: ${1}"; exit 1 ;;
     esac
     # Shifts once per loop to move to the next key/value.
     shift
 done
+
+# read hyperparameters from config.yaml
+model_size=$(yq -e '.model_size' "$config_file")
+num_layers=$(yq -e '.num_layers' "$config_file")
+hidden_size=$(yq -e '.hidden_size' "$config_file")
+ffn_hidden_size=$(yq -e '.ffn_hidden_size' "$config_file")
+num_attn_heads=$(yq -e '.num_attn_heads' "$config_file")
+seq_len=$(yq -e '.seq_len' "$config_file")
+
+lr=$(yq -e '.lr' "$config_file")
+min_lr=$(yq -e '.min_lr' "$config_file")
+lr_warmup_steps=$(yq -e '.lr_warmup_steps' "$config_file")
+weight_decay=$(yq -e '.weight_decay' "$config_file")
+clip_grad=$(yq -e '.clip_grad' "$config_file")
+init_std=$(yq -e '.init_std' "$config_file")
+
+global_batch_size=$(yq -e '.global_batch_size' "$config_file")
+
+zero_stage=$(yq -e '.zero_stage' "$config_file")
+
+mp_size=$(yq -e '.mp_size' "$config_file")
+pp_size=$(yq -e '.pp_size' "$config_file")
+
+log_interval=$(yq -e '.log_interval' "$config_file")
+eval_iters=$(yq -e '.eval_iters' "$config_file")
+eval_interval=$(yq -e '.eval_interval' "$config_file")
+num_save=$(yq -e '.num_save' "$config_file")
+save_interval=$(yq -e '.save_interval' "$config_file")
+
+train_tokens=$(yq -e '.train_tokens' "$config_file")
+lr_decay_tokens=$(yq -e '.lr_decay_tokens' "$config_file")
+lr_warmup_tokens_in_million=$(yq -e '.lr_warmup_tokens_in_million' "$config_file")
+lr_warmup_steps=$(yq -e '.lr_warmup_steps' "$config_file")
 
 # Checks the required arguments.
 if [[ -z ${input_tokenizer_file} ]] || [[ -z ${output_model_dir} ]]; then
@@ -47,7 +82,7 @@ echo ""
 ###############################################################################
 ### Main configs
 ## GPT-3 models use 2K sequence length/context window
-seq_len=2048
+#seq_len=2048
 
 ## The "GPT-3 XXX" below are configs from GPT-3 paper
 ## https://arxiv.org/abs/2005.14165, choose based on
@@ -61,89 +96,49 @@ seq_len=2048
 ## provide better zero-shot eval results.
 
 ## GPT-3 Small 125M
-model_size=0.125
-num_layers=12
-hidden_size=768
-num_attn_heads=12
-global_batch_size=256
-lr=6.0e-4
-min_lr=1.0e-6
-init_std=0.02
+#model_size=0.125
+#num_layers=12
+#hidden_size=768
+#num_attn_heads=12
+#global_batch_size=256
+#lr=6.0e-4
+#min_lr=1.0e-6
+#init_std=0.02
 
-## GPT-3 Medium 350M
-# model_size=0.35
-# num_layers=24
-# hidden_size=1024
-# num_attn_heads=16
-# global_batch_size=256
-# lr=3.0e-4
-# min_lr=1.0e-6
-# init_std=0.018
+# model config
+# llama-2-7b: https://huggingface.co/meta-llama/Llama-2-7b-hf/blob/main/config.json
+##hidden_size=4096
+##ffn_hidden_size=11008 # intermediate size (HuggingFace)
+##num_layers=32
+##num_attn_heads=32
+##seq_len=4096
+##lr=1e-4
+##min_lr=3.3e-6
+##lr_warmup_steps=1000
+##weight_decay=0.1
+##clip_grad=1
+##global_batch_size=1024
+##init_std=0.02
 
-## GPT-3 Large 760M
-# model_size=0.76
-# num_layers=24
-# hidden_size=1536
-# num_attn_heads=16
-# global_batch_size=256
-# lr=2.5e-4
-# min_lr=1.0e-6
-# init_std=0.015
-
-## GPT-3 XL 1.3B
-# model_size=1.3
-# num_layers=24
-# hidden_size=2048
-# num_attn_heads=16
-# global_batch_size=512
-# lr=2.0e-4
-# min_lr=1.0e-6
-# init_std=0.013
-
-## GPT-3 2.7B
-# model_size=2.7
-# num_layers=32
-# hidden_size=2560
-# num_attn_heads=32
-# global_batch_size=512
-# lr=1.6e-4
-# min_lr=1.0e-6
-# init_std=0.011
-
-## GPT-3 6.7B
-# model_size=6.7
-# num_layers=32
-# hidden_size=4096
-# num_attn_heads=32
-# global_batch_size=1024
-# lr=1.2e-4
-# min_lr=1.0e-6
-# init_std=0.009
-
-## GPT-3 13B
-# model_size=13
-# num_layers=40
-# hidden_size=5120
-# num_attn_heads=40
-# global_batch_size=1024
-# lr=1.0e-4
-# min_lr=1.0e-6
-# init_std=0.008
-
-## GPT-3 175B
-# model_size=175
-# num_layers=96
-# hidden_size=12288
-# num_attn_heads=96
-# global_batch_size=1536
-# lr=0.6e-4
-# min_lr=1.0e-6
-# init_std=0.005
+# model config
+# llama-2-0.7b: https://huggingface.co/meta-llama/Llama-2-7b-hf/blob/main/config.json
+#hidden_size=420
+#ffn_hidden_size=1108 # intermediate size (HuggingFace)
+#num_layers=3
+#num_attn_heads=3
+#seq_len=400
+#lr=1e-4
+#min_lr=3.3e-6
+#lr_warmup_steps=1000
+#weight_decay=0.1
+#clip_grad=1
+#global_batch_size=48
+#init_std=0.02
 ###############################################################################
 ### Training duration configs
 ## The main termination condition, original GPT-3 paper trains for 300B tokens.
-train_tokens_in_billion=300
-train_tokens=$((${train_tokens_in_billion} * 1000 * 1000 * 1000))
+#train_tokens_in_billion=300
+#train_tokens=$((${train_tokens_in_billion} * 1000 * 1000 * 1000))
 
 ## train_samples is another termination condition and also affect the number of 
 ## data samples to be indexed. Since we want to reach the train_tokens
@@ -163,24 +158,26 @@ exit_duration=30000000
 ## used, there are more tokens per step. Thus we need to increase warmup tokens
 ## to make sure there are enough warmup steps, which is important for training
 ## stability.
-lr_warmup_tokens_in_million=3000
-lr_warmup_tokens=$((${lr_warmup_tokens_in_million} * 1000 * 1000))
+#lr_warmup_tokens_in_million=3000
+#lr_warmup_tokens=$((${lr_warmup_tokens_in_million} * 1000 * 1000))
 ## Here we changed the LR decay tokens to align with total train tokens, since
 ## related works (e.g., https://arxiv.org/abs/2203.15556) find that setting the
 ## learning rate schedule to match the number of training tokens results in the
 ## best final model quality 
-lr_decay_tokens_in_billion=${train_tokens_in_billion}
-lr_decay_tokens=$((${lr_decay_tokens_in_billion} * 1000 * 1000 * 1000))
+#lr_decay_tokens_in_billion=${train_tokens_in_billion}
+#lr_decay_tokens=$((${lr_decay_tokens_in_billion} * 1000 * 1000 * 1000))
 lr_decay_style="cosine"
 ###############################################################################
 ### Parallelism configs
 ## Model parallelism, 1 is no MP
-mp_size=1
+#mp_size=1
+##1
 
 ## Pipeline parallelism. To disable PP, set pp_size to 1 and no_pp to true.
 ## Note that currently both curriculum learning and random-LTD are NOT
 ## compatible with pipeline parallelism.
-pp_size=1
+#pp_size=1
+##2
 
 # If you plan to use Megatron-DeepSpeed's deepspeed_to_transformers.py to convert
 # the checkpoint from Megatron-DeepSpeed format to Hugging Face Transformers format,
@@ -192,7 +189,7 @@ pp_size=1
 no_pp="false"
 
 ## ZeRO-based data parallelism, stage=0 will disable ZeRO
-zero_stage=0
+#zero_stage=0
 
 ## Total number of GPUs.
 num_gpus_pernode=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
@@ -206,16 +203,16 @@ dp_size=$(( ${num_gpus} / ${pp_size} / ${mp_size} ))
 ## Make sure that batch_size <= global_batch_size*pp_size*mp_size/num_gpus
 ## Reduce it manually if GPU OOM
 batch_size=$(( ${global_batch_size} / ${dp_size} ))
-# batch_size=2
+batch_size=${global_batch_size}
 ###############################################################################
 ### Misc configs
-log_interval=10
-eval_iters=10
-eval_interval=100
+#log_interval=10
+#eval_iters=10
+#eval_interval=100
 # num_save controls how frequent to save checkpoint. num_save=20 means that a
 # checkpoint will be saved every 5% of training. For longer training you would
 # want larger num_save to save more frequently, and vice versa.
-num_save=100
+#num_save=100
 estimated_train_iter=$((${train_tokens} / ${seq_len} / ${global_batch_size}))
 # save_interval=$((${estimated_train_iter} / ${num_save}))
 
@@ -288,25 +285,34 @@ data_options=" \
 
 ## If CL is used, make sure to set "--split" the same as what you used during
 ## offline data analysis&indexing.
+
+##old option
+#--lr-warmup-tokens ${lr_warmup_tokens} \
+#--no-async-tensor-model-parallel-allreduce \
+
+#unrecogizd --norm-epsilon 1e-5 \
+#--lr-warmup-iters ${lr_warmup_steps} \ エラーが消えない
 megatron_options=" \
     --override-opt_param-scheduler \
+    --optimizer adam\
     --adam-beta1 0.9 \
     --adam-beta2 0.95 \
     --tensor-model-parallel-size ${mp_size} \
     --init-method-std ${init_std} \
     --lr-decay-tokens ${lr_decay_tokens} \
-    --lr-warmup-tokens ${lr_warmup_tokens} \
     --micro-batch-size ${batch_size} \
     --exit-duration-in-mins ${exit_duration} \
     --global-batch-size ${global_batch_size} \
     --num-layers ${num_layers} \
     --hidden-size ${hidden_size} \
+    --ffn-hidden-size ${ffn_hidden_size} \
     --num-attention-heads ${num_attn_heads} \
     --seq-length ${seq_len} \
     --max-position-embeddings ${seq_len} \
     --train-tokens ${train_tokens} \
     --train-samples ${train_samples} \
     --lr ${lr} \
+    --lr-warmup-iters ${lr_warmup_steps} \
     --min-lr ${min_lr} \
     --lr-decay-style ${lr_decay_style} \
     --split 949,50,1 \
@@ -314,15 +320,23 @@ megatron_options=" \
     --eval-interval ${eval_interval} \
     --eval-iters ${eval_iters} \
     --save-interval ${save_interval} \
-    --weight-decay 0.1 \
-    --clip-grad 1.0 \
+    --weight-decay ${weight_decay} \
+    --clip-grad ${clip_grad} \
     --hysteresis 2 \
     --num-workers ${num_workers} \
-    --fp16 \
+    --bf16\
     --seed ${seed} \
     --load ${checkpoint_path} \
     --save ${checkpoint_path} \
-    --no-async-tensor-model-parallel-allreduce \
+    --untie-embeddings-and-output-weights \
+    --attention-dropout 0 \
+    --hidden-dropout 0 \
+    --use-rotary-position-embeddings \
+    --normalization rmsnorm \
+    --no-position-embedding \
+    --no-masked-softmax-fusion \
+    --no-query-key-layer-scaling \
+    --swiglu \
     --use-flash-attn-v2 \
     --tensorboard-queue-size 1 \
     --log-timers-to-tensorboard \
