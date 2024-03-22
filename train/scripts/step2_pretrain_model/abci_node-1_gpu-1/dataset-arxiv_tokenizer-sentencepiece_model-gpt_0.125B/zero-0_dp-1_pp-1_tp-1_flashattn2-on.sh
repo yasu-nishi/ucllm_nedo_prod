@@ -142,15 +142,15 @@ init_std=0.02
 ###############################################################################
 ### Training duration configs
 ## The main termination condition, original GPT-3 paper trains for 300B tokens.
-train_tokens_in_billion=300
-train_tokens=$((${train_tokens_in_billion} * 1000 * 1000 * 1000))
+train_tokens_in_billion=3
+train_tokens=$((${train_tokens_in_billion} * 1000 * 1000))
 
 ## train_samples is another termination condition and also affect the number of 
 ## data samples to be indexed. Since we want to reach the train_tokens
 ## above, and data efficiency techniques may change num tokens in some samples,
 ## so we just set this config large enough to make sure we have enough
 ## processed data and don't terminate by train_samples.
-train_samples=$(( 300 * 1000 * 1000 * 1000 * 2 / ${seq_len} ))
+train_samples=$(( 3 * 1000 * 1000 * 2 / ${seq_len} ))
 
 ## Another wall-clock time termination condition in minutes. Set it large
 ## enough to avoid undesired early termination.
@@ -163,14 +163,14 @@ exit_duration=30000000
 ## used, there are more tokens per step. Thus we need to increase warmup tokens
 ## to make sure there are enough warmup steps, which is important for training
 ## stability.
-lr_warmup_tokens_in_million=3000
-lr_warmup_tokens=$((${lr_warmup_tokens_in_million} * 1000 * 1000))
+lr_warmup_tokens_in_million=30
+lr_warmup_tokens=$((${lr_warmup_tokens_in_million} * 1000))
 ## Here we changed the LR decay tokens to align with total train tokens, since
 ## related works (e.g., https://arxiv.org/abs/2203.15556) find that setting the
 ## learning rate schedule to match the number of training tokens results in the
 ## best final model quality 
 lr_decay_tokens_in_billion=${train_tokens_in_billion}
-lr_decay_tokens=$((${lr_decay_tokens_in_billion} * 1000 * 1000 * 1000))
+lr_decay_tokens=$((${lr_decay_tokens_in_billion} * 1000 * 1000))
 lr_decay_style="cosine"
 ###############################################################################
 ### Parallelism configs

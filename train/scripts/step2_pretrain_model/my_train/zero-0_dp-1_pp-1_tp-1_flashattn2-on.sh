@@ -41,7 +41,7 @@ seq_len=$(yq -e '.seq_len' "$config_file")
 
 train_iters=$(yq -e '.train_iters' "$config_file")
 #train_tokens=$(yq -e '.train_tokens' "$config_file")
-lr_decay_tokens=$(yq -e '.lr_decay_tokens' "$config_file")
+#lr_decay_tokens=$(yq -e '.lr_decay_tokens' "$config_file")
 #lr_warmup_tokens_in_million=$(yq -e '.lr_warmup_tokens_in_million' "$config_file")
 #lr_warmup_steps=$(yq -e '.lr_warmup_steps' "$config_file")
 
