@@ -299,6 +299,7 @@ data_options=" \
 #--lr-warmup-iters ${lr_warmup_steps} \ エラーが消えない
 ##--train-tokens ${train_tokens} \
 ##--train-samples ${train_samples} \
+#--lr-decay-tokens ${lr_decay_tokens} \
     
 
 megatron_options=" \
@@ -308,7 +309,6 @@ megatron_options=" \
     --adam-beta2 0.95 \
     --tensor-model-parallel-size ${mp_size} \
     --init-method-std ${init_std} \
-    --lr-decay-tokens ${lr_decay_tokens} \
     --micro-batch-size ${batch_size} \
     --exit-duration-in-mins ${exit_duration} \
     --global-batch-size ${global_batch_size} \
