@@ -1,0 +1,46 @@
+#data configs
+
+##Llama 7B param
+##model_size=7.0
+##hidden_size=4096
+##ffn_hidden_size=11008 # intermediate size (HuggingFace)
+##num_layers=32
+##num_attn_heads=32
+##seq_len=4096
+
+#model params
+model_size: 0.7
+hidden_size: 512
+ffn_hidden_size: 1108
+num_layers: 2
+num_attn_heads: 16
+seq_len: 1024
+
+#learning parametor
+lr: 3.0e-4
+min_lr: 3.0e-5
+weight_decay: 0.1
+clip_grad: 1
+init_std: 0.02
+
+global_batch_size: 4
+
+#deepspeed
+zero_stage: 0
+
+mp_size: 1
+pp_size: 1
+
+# logging parameters
+log_interval: 100
+eval_iters: 100
+eval_interval: 1000
+num_save: 10
+save_interval: 1000
+#token info
+#train_tokens: 300000 # 3.6 b, 1 epochになるように調整
+#lr_decay_tokens: 300000000000
+#lr_warmup_tokens_in_million: 3000000000
+#lr_warmup_steps: 100
+train_iters: 10000 # e.g. llama: 1T tokens / 4M tokens_per_batch = 250000 steps
+lr_warmup_iters: 1000
