@@ -10,9 +10,9 @@
 
 #model params
 model_size: 0.7
-hidden_size: 512
-ffn_hidden_size: 1108
-num_layers: 2
+hidden_size: 2048
+ffn_hidden_size: 5504
+num_layers: 24
 num_attn_heads: 16
 seq_len: 1024
 

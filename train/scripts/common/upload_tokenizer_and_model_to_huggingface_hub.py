@@ -4,7 +4,6 @@ import torch
 from huggingface_hub import HfApi
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_tokenizer_and_model_dir", type=str, required=True)

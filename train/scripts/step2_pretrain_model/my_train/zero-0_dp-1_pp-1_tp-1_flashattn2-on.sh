@@ -4,7 +4,7 @@ set -e
 echo ""
 
 # Stores the directory paths as variables.
-ucllm_nedo_dev_train_dir="${HOME}/ucllm_nedo_dev/train"
+ucllm_nedo_dev_train_dir="../.."
 megatron_deepspeed_dir="${ucllm_nedo_dev_train_dir}/Megatron-DeepSpeed"
 echo "ucllm_nedo_dev_train_dir = ${ucllm_nedo_dev_train_dir}"
 echo "megatron_deepspeed_dir = ${megatron_deepspeed_dir}"
@@ -247,7 +247,7 @@ if [ ! -f "${data_path}.bin" ] || [ ! -f "${data_path}.idx" ]; then
         --input ${megatron_deepspeed_dir}/dataset/arxiv.jsonl \
         --output-prefix ${megatron_deepspeed_dir}/dataset/arxiv \
         --dataset-impl mmap \
-        --workers 64 \
+        --workers 8 \
         --append-eod
 else
     echo "Both ${data_path}.bin and ${data_path}.idx already exist."
